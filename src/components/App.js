@@ -6,6 +6,8 @@ import ChatContainer from './ChatContainer';
 import UserContainer from './UserContainer';
 
 class App extends Component {
+  state = { user: null, messages: [], messagesLoaded: false };
+
   componentDidMount() {
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
@@ -19,9 +21,23 @@ class App extends Component {
       .database()
       .ref('/messages')
       .on('value', snapshot => {
-        console.log('here');
-        console.log(snapshot);
+        this.onMessage(snapshot);
+        if (!this.state.messagesLoaded) {
+          this.setState({ messagesLoaded: true })
+        }
       });
+  }
+
+  onMessage = snapshot => {
+    const values = snapshot.val();
+
+    const messages = Object.keys(values).map(key => {
+      const msg = values[key];
+      msg.id = key;
+      return msg;
+    });
+
+    this.setState({ messages });
   }
 
   handleSubmitMessage = msg => {
@@ -48,8 +64,25 @@ class App extends Component {
         <Route
           exact={true}
           path="/"
-          render = {() => <ChatContainer onSubmit={this.handleSubmitMessage} />} />
-        <Route path="/users/:id" component={UserContainer} />
+          render = {() => (
+            <ChatContainer
+              onSubmit={this.handleSubmitMessage}
+              messages={this.state.messages}
+              messagesLoaded={this.state.messagesLoaded}
+              user={this.state.user} 
+            />)
+          }
+        />
+        <Route
+          path="/users/:id"
+          render={({ history, match }) => (
+            <UserContainer
+              messages={this.state.messages}
+              messagesLoaded={this.state.messagesLoaded}
+              userID={match.params.id} 
+            />
+          )} 
+        />
       </div>
     );
   }
