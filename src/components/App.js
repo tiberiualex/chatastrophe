@@ -4,28 +4,38 @@ import './app.css';
 import LoginContainer from './LoginContainer';
 import ChatContainer from './ChatContainer';
 import UserContainer from './UserContainer';
+import NotificationResource from '../resources/NotificationResource';
 
 class App extends Component {
   state = { user: null, messages: [], messagesLoaded: false };
 
   componentDidMount() {
+    this.notifications = new NotificationResource(firebase.messaging(), firebase.database());
+
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
-        this.setState({ user });
+        this.setState({ user: user });
+        this.listenForMessages();
+        this.notifications.changeUser(user);
       } else {
         this.props.history.push('/login');
       }
     });
+  
+    this.listenForMessages();
+  }
 
+  listenForMessages = () => {
     firebase
-      .database()
-      .ref('/messages')
-      .on('value', snapshot => {
-        this.onMessage(snapshot);
-        if (!this.state.messagesLoaded) {
-          this.setState({ messagesLoaded: true })
-        }
-      });
+    .database()
+    .ref('/messages')
+    .on('value', snapshot => {
+      console.log('listen for messages')
+      this.onMessage(snapshot);
+      if (!this.state.messagesLoaded) {
+        this.setState({ messagesLoaded: true })
+      }
+    });
   }
 
   onMessage = snapshot => {

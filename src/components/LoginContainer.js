@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Header from './Header';
 
 class LoginContainer extends Component {
-  state = { email: '', password: '', state: '' };
+  state = { email: '', password: '', error: '' };
 
   handleEmailChange = e => {
     this.setState({ email: e.target.value });
@@ -18,9 +18,9 @@ class LoginContainer extends Component {
 
   login() {
     firebase
-      .auth()
-      .signInWithEmailAndPassword(this.state.email, this.state.password)
-      .then(res => {
+    .auth()
+    .signInWithEmailAndPassword(this.state.email, this.state.password)
+    .then(res => {   
         this.onLogin();
       })
       .catch(err => {
